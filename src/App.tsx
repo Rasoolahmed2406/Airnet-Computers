@@ -1271,6 +1271,9 @@ function RecordPage() {
   const [dbConfigUrl, setDbConfigUrl] = useState(localStorage.getItem('airnet_supabase_url') || '');
   const [dbConfigKey, setDbConfigKey] = useState(localStorage.getItem('airnet_supabase_anon_key') || '');
 
+  // Fixed WhatsApp target number
+  const WA_TARGET_NUMBER = '7892881086';
+
   const handleSaveDbConfig = (e: React.FormEvent) => {
     e.preventDefault();
     saveSupabaseCredentials(dbConfigUrl, dbConfigKey);
@@ -1690,6 +1693,8 @@ function RecordPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+
     </div>
   );
 }
