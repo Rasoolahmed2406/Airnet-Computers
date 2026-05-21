@@ -91,7 +91,13 @@ import {
   clearAllDbRecords,
   isSupabaseConfigured,
   saveSupabaseCredentials,
-  getSupabaseSource
+  getSupabaseSource,
+  fetchDbServices,
+  insertDbService,
+  updateDbService,
+  deleteDbService,
+  updateDbServicePositions,
+  Service
 } from './lib/supabase';
 
 const ServiceIcon = ({ 
@@ -551,13 +557,6 @@ const ServiceIcon = ({
 const PRIMARY = '#032e60';
 const ACCENT = '#eff6ff';
 
-interface Service {
-  id: number;
-  name: string;
-  url: string;
-  icon: string;
-  position: number;
-}
 
 interface BankingPortal {
   id: number;
@@ -794,8 +793,13 @@ function HomePage() {
       setBankingPortals(defaultBanking);
     }
 
-    const savedServices = localStorage.getItem('airnet_services');
-    setServices(savedServices ? JSON.parse(savedServices).slice(0, 6) : defaultServices.slice(0, 6));
+    fetchDbServices().then(data => {
+      if (data.length > 0) {
+        setServices(data.slice(0, 6));
+      } else {
+        setServices(defaultServices.slice(0, 6));
+      }
+    });
   }, []);
 
   return (
@@ -988,10 +992,10 @@ function ServicesPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const fetchServices = () => {
-    const savedServices = localStorage.getItem('airnet_services');
-    if (savedServices) {
-      setServices(JSON.parse(savedServices).sort((a: Service, b: Service) => a.position - b.position));
+  const fetchServices = async () => {
+    const savedServices = await fetchDbServices();
+    if (savedServices && savedServices.length > 0) {
+      setServices(savedServices);
     } else {
       const defaultServices = [
         { id: 1, name: 'Aadhaar', url: 'https://myaadhaar.uidai.gov.in/', icon: 'Fingerprint', position: 1 },
@@ -1015,12 +1019,13 @@ function ServicesPage() {
         { id: 19, name: 'Seva Sindhu', url: 'https://sevasindhuservices.karnataka.gov.in', icon: 'Globe', position: 19 }
       ];
       setServices(defaultServices);
+      await updateDbServicePositions(defaultServices);
     }
   };
 
   useEffect(() => { fetchServices(); }, []);
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = async (event: any) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
       const oldIndex = services.findIndex(s => s.id === active.id);
@@ -1029,39 +1034,38 @@ function ServicesPage() {
 
       const updatedServices = newServices.map((s, idx) => ({ ...s, position: idx + 1 }));
       setServices(updatedServices);
-      localStorage.setItem('airnet_services', JSON.stringify(updatedServices));
+      await updateDbServicePositions(updatedServices);
 
       setToast('Position saved');
       setTimeout(() => setToast(''), 2000);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let updatedServices = [...services];
     if (editingService) {
-      updatedServices = updatedServices.map(s => s.id === editingService.id ? { ...s, ...formData } : s);
+      const updatedService = { ...editingService, ...formData };
+      setServices(services.map(s => s.id === editingService.id ? updatedService : s));
+      await updateDbService(editingService.id, formData);
     } else {
       const newService = {
         id: Date.now(),
         ...formData,
         position: services.length + 1
       };
-      updatedServices.push(newService);
+      setServices([...services, newService]);
+      await insertDbService(newService);
     }
 
-    setServices(updatedServices);
-    localStorage.setItem('airnet_services', JSON.stringify(updatedServices));
     setShowModal(false);
     setEditingService(null);
     setFormData({ name: '', url: '', icon: '' });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      const updatedServices = services.filter(s => s.id !== deleteId);
-      setServices(updatedServices);
-      localStorage.setItem('airnet_services', JSON.stringify(updatedServices));
+      setServices(services.filter(s => s.id !== deleteId));
+      await deleteDbService(deleteId);
       setDeleteId(null);
     }
   };

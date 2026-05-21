@@ -192,3 +192,108 @@ export const clearAllDbRecords = async (): Promise<void> => {
   
   await saveLocalServerRecords([]);
 };
+
+// --- Services API ---
+
+export interface Service {
+  id: number;
+  name: string;
+  url: string;
+  icon: string;
+  position: number;
+}
+
+const getOfflineServices = (): Service[] => {
+  try {
+    const saved = localStorage.getItem('airnet_services');
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const saveOfflineServices = (services: Service[]) => {
+  localStorage.setItem('airnet_services', JSON.stringify(services));
+};
+
+export const fetchDbServices = async (): Promise<Service[]> => {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('position', { ascending: true });
+      
+    if (error) {
+      console.error('Supabase fetch services error:', error);
+      return getOfflineServices();
+    }
+    return data || [];
+  }
+  return getOfflineServices();
+};
+
+export const insertDbService = async (service: Service): Promise<Service> => {
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('services')
+      .insert([service])
+      .select();
+      
+    if (error) {
+      console.error('Supabase insert service error:', error);
+      const current = getOfflineServices();
+      saveOfflineServices([...current, service]);
+      return service;
+    }
+    return data && data[0] ? data[0] : service;
+  }
+  const current = getOfflineServices();
+  saveOfflineServices([...current, service]);
+  return service;
+};
+
+export const updateDbService = async (id: number, updates: Partial<Service>): Promise<void> => {
+  if (supabase) {
+    const { error } = await supabase
+      .from('services')
+      .update(updates)
+      .eq('id', id);
+      
+    if (!error) return;
+    console.error('Supabase update service error:', error);
+  }
+  const current = getOfflineServices();
+  const updated = current.map(s => s.id === id ? { ...s, ...updates } : s);
+  saveOfflineServices(updated);
+};
+
+export const deleteDbService = async (id: number): Promise<void> => {
+  if (supabase) {
+    const { error } = await supabase
+      .from('services')
+      .delete()
+      .eq('id', id);
+      
+    if (!error) return;
+    console.error('Supabase delete service error:', error);
+  }
+  const current = getOfflineServices();
+  const updated = current.filter(s => s.id !== id);
+  saveOfflineServices(updated);
+};
+
+export const updateDbServicePositions = async (services: Service[]): Promise<void> => {
+  if (supabase) {
+    // Bulk update requires looping or upsert. Upsert is easiest if id is primary key
+    const { error } = await supabase
+      .from('services')
+      .upsert(services);
+      
+    if (error) {
+      console.error('Supabase upsert services error:', error);
+    } else {
+      return;
+    }
+  }
+  saveOfflineServices(services);
+};

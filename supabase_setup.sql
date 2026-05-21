@@ -23,3 +23,19 @@ create policy "Allow public read access" on customer_records for select using (t
 create policy "Allow public insert access" on customer_records for insert with check (true);
 create policy "Allow public update access" on customer_records for update using (true);
 create policy "Allow public delete access" on customer_records for delete using (true);
+
+-- Services Table
+create table if not exists services (
+  id bigint primary key,
+  name text not null,
+  url text not null,
+  icon text not null,
+  position integer not null
+);
+
+alter table services enable row level security;
+
+create policy "Allow public read access on services" on services for select using (true);
+create policy "Allow public insert access on services" on services for insert with check (true);
+create policy "Allow public update access on services" on services for update using (true);
+create policy "Allow public delete access on services" on services for delete using (true);
