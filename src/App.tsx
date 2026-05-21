@@ -97,11 +97,13 @@ import {
 const ServiceIcon = ({ 
   iconName, 
   name = '', 
+  url = '',
   size = 28, 
   className = '' 
 }: { 
   iconName: string; 
   name?: string; 
+  url?: string;
   size?: number; 
   className?: string; 
 }) => {
@@ -512,8 +514,41 @@ const ServiceIcon = ({
     );
   }
 
+  // Favicon fallback
+  let domain = '';
+  if (url) {
+    try {
+      domain = new URL(url).hostname;
+    } catch(e) {}
+  }
+
+  if (domain) {
+    return <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${size * 2}`} width={size} height={size} className={className} alt={name || domain} style={{ borderRadius: '20%', objectFit: 'contain' }} />;
+  }
+
   // Fallback to Lucide Icons
-  const Icon = (LucideIcons as any)[iconName];
+  let Icon = (LucideIcons as any)[iconName];
+  
+  if (!Icon) {
+    if (normalizedName.includes('bank') || normalizedName.includes('pay') || normalizedName.includes('finance') || normalizedName.includes('money')) Icon = LucideIcons.Landmark;
+    else if (normalizedName.includes('school') || normalizedName.includes('college') || normalizedName.includes('university') || normalizedName.includes('student') || normalizedName.includes('exam')) Icon = LucideIcons.GraduationCap;
+    else if (normalizedName.includes('health') || normalizedName.includes('medical') || normalizedName.includes('hospital') || normalizedName.includes('doctor')) Icon = LucideIcons.HeartPulse;
+    else if (normalizedName.includes('job') || normalizedName.includes('work') || normalizedName.includes('employ')) Icon = LucideIcons.Briefcase;
+    else if (normalizedName.includes('tax') || normalizedName.includes('gst') || normalizedName.includes('file') || normalizedName.includes('pan')) Icon = LucideIcons.FileText;
+    else if (normalizedName.includes('police') || normalizedName.includes('fir') || normalizedName.includes('law') || normalizedName.includes('court')) Icon = LucideIcons.Shield;
+    else if (normalizedName.includes('water') || normalizedName.includes('electricity') || normalizedName.includes('bill') || normalizedName.includes('power')) Icon = LucideIcons.Zap;
+    else if (normalizedName.includes('certificate') || normalizedName.includes('income') || normalizedName.includes('caste')) Icon = LucideIcons.FileBadge;
+    else if (normalizedName.includes('travel') || normalizedName.includes('ticket') || normalizedName.includes('bus') || normalizedName.includes('train') || normalizedName.includes('flight')) Icon = LucideIcons.Ticket;
+    else if (normalizedName.includes('shop') || normalizedName.includes('store') || normalizedName.includes('buy') || normalizedName.includes('sell')) Icon = LucideIcons.ShoppingCart;
+    else if (normalizedName.includes('car') || normalizedName.includes('vehicle') || normalizedName.includes('transport') || normalizedName.includes('drive')) Icon = LucideIcons.Car;
+    else if (normalizedName.includes('house') || normalizedName.includes('home') || normalizedName.includes('property') || normalizedName.includes('estate') || normalizedName.includes('land')) Icon = LucideIcons.Home;
+    else if (iconName && iconName.length <= 2 && iconName !== '🔗') {
+      return <span className={className}>{iconName}</span>;
+    } else {
+      Icon = LucideIcons.Globe;
+    }
+  }
+
   if (Icon) {
     return <Icon size={size} className={className} />;
   }
@@ -816,7 +851,7 @@ function HomePage() {
                       transition={{ delay: 0.3 + i * 0.05 }}
                       className="group bg-white/95 backdrop-blur rounded-2xl p-4 hover:bg-white transition-all hover:shadow-xl hover:-translate-y-1 flex flex-col items-center text-center"
                     >
-                      <div className="text-[#032e60] mb-2 flex justify-center"><ServiceIcon iconName={service.icon} name={service.name} size={28} /></div>
+                      <div className="text-[#032e60] mb-2 flex justify-center"><ServiceIcon iconName={service.icon} name={service.name} url={service.url} size={28} /></div>
                       <div className="font-semibold text-[14px] text-gray-900 group-hover:text-[#032e60]">{service.name}</div>
                       <div className="text-[11px] text-gray-500 mt-1 flex items-center justify-center gap-1">
                         Open <ExternalLink size={10} />
@@ -876,7 +911,7 @@ function HomePage() {
             <div key={bank.id} className="banking-card card overflow-hidden group flex flex-col justify-between">
               <div className="p-6 flex flex-col items-center text-center">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center text-[#032e60] mb-4" style={{ background: ACCENT }}>
-                  <ServiceIcon iconName={bank.icon} name={bank.name} size={36} />
+                  <ServiceIcon iconName={bank.icon} name={bank.name} url={bank.url} size={36} />
                 </div>
                 <h3 className="font-bold text-[17px] mb-1.5" style={{ color: PRIMARY }}>{bank.name}</h3>
                 <p className="text-[13px] text-gray-600 leading-snug min-h-[36px]">{bank.description}</p>
@@ -937,7 +972,7 @@ function SortableServiceCard({ service, onEdit, onDelete }: { service: Service; 
       </div>
 
       <div className="flex flex-col items-center justify-center flex-grow w-full mt-4">
-        <div className="text-[#032e60] mb-3 flex justify-center"><ServiceIcon iconName={service.icon} name={service.name} size={36} /></div>
+        <div className="text-[#032e60] mb-3 flex justify-center"><ServiceIcon iconName={service.icon} name={service.name} url={service.url} size={36} /></div>
         <h3 className="font-bold text-[16px] mb-4" style={{ color: PRIMARY }}>{service.name}</h3>
       </div>
       <a href={service.url} target="_blank" rel="noopener" className="btn-primary w-full py-2.5 rounded-full font-medium text-[13px] flex items-center justify-center gap-1.5 group/btn">
@@ -953,7 +988,7 @@ function ServicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ name: '', url: '', icon: '🔗' });
+  const [formData, setFormData] = useState({ name: '', url: '', icon: '' });
   const [toast, setToast] = useState('');
 
   const sensors = useSensors(
@@ -1027,7 +1062,7 @@ function ServicesPage() {
     localStorage.setItem('airnet_services', JSON.stringify(updatedServices));
     setShowModal(false);
     setEditingService(null);
-    setFormData({ name: '', url: '', icon: '🔗' });
+    setFormData({ name: '', url: '', icon: '' });
   };
 
   const handleDelete = () => {
@@ -1079,7 +1114,7 @@ function ServicesPage() {
               ))}
 
               {!searchQuery && (
-                <button onClick={() => { setEditingService(null); setFormData({ name: '', url: '', icon: '🔗' }); setShowModal(true); }} className="card p-5 border-2 border-dashed border-gray-300 hover:border-[#032e60]/50 bg-white/50 hover:bg-white transition-all group min-h-[220px] flex flex-col items-center justify-center">
+                <button onClick={() => { setEditingService(null); setFormData({ name: '', url: '', icon: '' }); setShowModal(true); }} className="card p-5 border-2 border-dashed border-gray-300 hover:border-[#032e60]/50 bg-white/50 hover:bg-white transition-all group min-h-[220px] flex flex-col items-center justify-center">
                   <div className="w-12 h-12 rounded-2xl border-2 border-dashed border-gray-300 group-hover:border-[#032e60] flex items-center justify-center mb-3 transition-colors">
                     <Plus size={24} className="text-gray-400 group-hover:text-[#032e60]" />
                   </div>
@@ -1107,10 +1142,7 @@ function ServicesPage() {
                   <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Service URL</label>
                   <input type="url" required value={formData.url} onChange={e => setFormData({ ...formData, url: e.target.value })} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#032e60]/20 focus:border-[#032e60] transition-all" placeholder="https://..." />
                 </div>
-                <div>
-                  <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Icon (emoji)</label>
-                  <input type="text" value={formData.icon} onChange={e => setFormData({ ...formData, icon: e.target.value })} className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#032e60]/20 focus:border-[#032e60] transition-all text-[24px]" placeholder="🔗" maxLength={2} />
-                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl font-medium border border-gray-300 hover:bg-gray-50 transition-colors">Cancel</button>
                   <button type="submit" className="flex-1 btn-primary py-2.5 rounded-xl font-medium">{editingService ? 'Save Changes' : 'Add Service'}</button>
@@ -1237,7 +1269,7 @@ function BankingPage() {
               <div key={bank.id} className="banking-card card overflow-hidden group flex flex-col justify-between">
                 <div className="p-6 flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl flex items-center justify-center text-[#032e60] mb-4" style={{ background: ACCENT }}>
-                    <ServiceIcon iconName={bank.icon} name={bank.name} size={36} />
+                    <ServiceIcon iconName={bank.icon} name={bank.name} url={bank.url} size={36} />
                   </div>
                   <h3 className="font-bold text-[17px] mb-1.5" style={{ color: PRIMARY }}>{bank.name}</h3>
                   <p className="text-[13px] text-gray-600 leading-snug min-h-[36px]">{bank.description}</p>
