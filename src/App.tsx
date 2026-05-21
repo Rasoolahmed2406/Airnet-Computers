@@ -514,23 +514,15 @@ const ServiceIcon = ({
     );
   }
 
-  // Favicon fallback
-  let domain = '';
-  if (url) {
-    try {
-      domain = new URL(url).hostname;
-    } catch(e) {}
-  }
 
-  if (domain) {
-    return <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=${size * 2}`} width={size} height={size} className={className} alt={name || domain} style={{ borderRadius: '20%', objectFit: 'contain' }} />;
-  }
 
   // Fallback to Lucide Icons
   let Icon = (LucideIcons as any)[iconName];
   
   if (!Icon) {
-    if (normalizedName.includes('bank') || normalizedName.includes('pay') || normalizedName.includes('finance') || normalizedName.includes('money')) Icon = LucideIcons.Landmark;
+    if (normalizedName.includes('kea') || normalizedName.includes('nta')) Icon = LucideIcons.BookOpen || LucideIcons.GraduationCap;
+    else if (normalizedName.includes('google')) Icon = LucideIcons.Search;
+    else if (normalizedName.includes('bank') || normalizedName.includes('pay') || normalizedName.includes('finance') || normalizedName.includes('money')) Icon = LucideIcons.Landmark;
     else if (normalizedName.includes('school') || normalizedName.includes('college') || normalizedName.includes('university') || normalizedName.includes('student') || normalizedName.includes('exam')) Icon = LucideIcons.GraduationCap;
     else if (normalizedName.includes('health') || normalizedName.includes('medical') || normalizedName.includes('hospital') || normalizedName.includes('doctor')) Icon = LucideIcons.HeartPulse;
     else if (normalizedName.includes('job') || normalizedName.includes('work') || normalizedName.includes('employ')) Icon = LucideIcons.Briefcase;
