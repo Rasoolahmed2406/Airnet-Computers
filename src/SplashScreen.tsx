@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -18,7 +18,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const welcomeText = "WELCOME TO AIRNET COMPUTERS";
 
   // Container variants for letter-by-letter stagger
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -30,7 +30,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   };
 
   // Letter fade-up animation
-  const letterVariants = {
+  const letterVariants: Variants = {
     hidden: { 
       opacity: 0,
       y: 15,
@@ -47,7 +47,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   };
 
   // Logo spring & glow animation
-  const logoVariants = {
+  const logoVariants: Variants = {
     hidden: {
       opacity: 0,
       scale: 0.5,
