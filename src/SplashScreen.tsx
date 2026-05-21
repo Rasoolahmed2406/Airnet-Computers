@@ -102,7 +102,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           className="w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-100"
         >
           <img 
-            src="/Logo.png" 
+            src="/logo-new.png" 
             alt="Airnet Computers Logo" 
             className="w-full h-full object-cover scale-110 pointer-events-none"
           />
@@ -113,7 +113,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="mt-10 text-xl sm:text-2xl md:text-3xl font-bold tracking-widest bg-gradient-to-r from-[#032e60] to-[#1e90ff] bg-clip-text text-transparent text-center"
+          className="mt-10 text-xl sm:text-2xl md:text-3xl font-bold tracking-widest text-[#032e60] text-center"
           style={{
             fontFamily: "'Montserrat', 'Poppins', sans-serif",
             textShadow: '0 0 20px rgba(30, 144, 255, 0.3)',
