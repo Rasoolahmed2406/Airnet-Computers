@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test CSV Export</title></head>
+<body>
+<button onclick="exportTest()">Test Download</button>
+<script>
+function exportTest() {
+  console.log('Test clicked');
+  const csv = 'SL,Name,Date\n1,Test,01-01-2024\n2,Demo,02-01-2024';
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'test_airnet.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert('Download should start');
+}
+</script>
+</body>
+</html>
