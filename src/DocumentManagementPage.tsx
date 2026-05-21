@@ -108,8 +108,7 @@ export default function DocumentManagementPage() {
   };
 
   const generateWhatsAppLink = (record: DocumentRecord) => {
-    let phone = record.mobileNumber.replace(/\D/g, '');
-    if (phone.length === 10) phone = '91' + phone;
+    const targetPhone = '917892881086';
     
     const message = `Dear ${record.customerName},
 
@@ -123,7 +122,7 @@ Best Regards,
 AIRNET COMPUTERS
 Basavakalyan`;
 
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
   };
 
   const sendWhatsApp = () => {
