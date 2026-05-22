@@ -216,6 +216,18 @@ const saveOfflineServices = (services: Service[]) => {
   localStorage.setItem('airnet_services', JSON.stringify(services));
 };
 
+const fetchLocalServerServices = async (): Promise<Service[]> => {
+  try {
+    const res = await fetch('/api/services');
+    if (!res.ok) throw new Error('Local server services fetch failed');
+    const data = await res.json();
+    return Array.isArray(data) ? data : getOfflineServices();
+  } catch (e) {
+    console.error('Local API fetch failed, falling back to offline:', e);
+    return getOfflineServices();
+  }
+};
+
 export const fetchDbServices = async (): Promise<Service[]> => {
   if (supabase) {
     const { data, error } = await supabase
@@ -225,11 +237,11 @@ export const fetchDbServices = async (): Promise<Service[]> => {
       
     if (error) {
       console.error('Supabase fetch services error:', error);
-      return getOfflineServices();
+      return fetchLocalServerServices();
     }
     return data || [];
   }
-  return getOfflineServices();
+  return fetchLocalServerServices();
 };
 
 export const insertDbService = async (service: Service): Promise<Service> => {
@@ -241,14 +253,24 @@ export const insertDbService = async (service: Service): Promise<Service> => {
       
     if (error) {
       console.error('Supabase insert service error:', error);
-      const current = getOfflineServices();
-      saveOfflineServices([...current, service]);
-      return service;
+    } else {
+      return data && data[0] ? data[0] : service;
     }
-    return data && data[0] ? data[0] : service;
   }
+  
+  // Fallback to local server / offline
   const current = getOfflineServices();
   saveOfflineServices([...current, service]);
+  try {
+    const res = await fetch('/api/services', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(service)
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.error('Local API insert failed:', e);
+  }
   return service;
 };
 
@@ -262,9 +284,20 @@ export const updateDbService = async (id: number, updates: Partial<Service>): Pr
     if (!error) return;
     console.error('Supabase update service error:', error);
   }
+  
+  // Fallback to local server / offline
   const current = getOfflineServices();
   const updated = current.map(s => s.id === id ? { ...s, ...updates } : s);
   saveOfflineServices(updated);
+  try {
+    await fetch('/api/services', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...updates })
+    });
+  } catch (e) {
+    console.error('Local API update failed:', e);
+  }
 };
 
 export const deleteDbService = async (id: number): Promise<void> => {
@@ -277,14 +310,24 @@ export const deleteDbService = async (id: number): Promise<void> => {
     if (!error) return;
     console.error('Supabase delete service error:', error);
   }
+  
+  // Fallback to local server / offline
   const current = getOfflineServices();
   const updated = current.filter(s => s.id !== id);
   saveOfflineServices(updated);
+  try {
+    await fetch('/api/services', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+  } catch (e) {
+    console.error('Local API delete failed:', e);
+  }
 };
 
 export const updateDbServicePositions = async (services: Service[]): Promise<void> => {
   if (supabase) {
-    // Bulk update requires looping or upsert. Upsert is easiest if id is primary key
     const { error } = await supabase
       .from('services')
       .upsert(services);
@@ -295,5 +338,20 @@ export const updateDbServicePositions = async (services: Service[]): Promise<voi
       return;
     }
   }
+  
+  // Fallback to local server / offline
   saveOfflineServices(services);
+  try {
+    // /api/services doesn't have a bulk upsert, so we sequentially update positions
+    for (const s of services) {
+      await fetch('/api/services', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: s.id, position: s.position })
+      });
+    }
+  } catch (e) {
+    console.error('Local API bulk update failed:', e);
+  }
 };
+

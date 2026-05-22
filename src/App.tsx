@@ -542,6 +542,22 @@ const ServiceIcon = ({
     else if (normalizedName.includes('house') || normalizedName.includes('home') || normalizedName.includes('property') || normalizedName.includes('estate') || normalizedName.includes('land')) Icon = LucideIcons.Home;
     else if (iconName && iconName.length <= 2 && iconName !== '🔗') {
       return <span className={className}>{iconName}</span>;
+    } else if (url) {
+      try {
+        const domain = new URL(url).hostname;
+        return (
+          <img 
+            src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`} 
+            width={size} 
+            height={size} 
+            className={className} 
+            alt={name || domain} 
+            style={{ borderRadius: '20%', objectFit: 'contain' }}
+          />
+        );
+      } catch (e) {
+        Icon = LucideIcons.Globe;
+      }
     } else {
       Icon = LucideIcons.Globe;
     }
