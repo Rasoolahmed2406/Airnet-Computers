@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Download, Upload, AlertTriangle, ShieldCheck, Database, RefreshCw, CheckCircle2, FileText, FileSpreadsheet } from 'lucide-react';
+import { Download, Upload, AlertTriangle, ShieldCheck, Database, RefreshCw, CheckCircle2, FileText, FileSpreadsheet, Cloud, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { saveSupabaseCredentials, isSupabaseConfigured } from './lib/supabase';
 
 // Two-tier download: native OS dialog (Chrome 86+) → blob anchor fallback
 async function saveExcelBlob(blob: Blob, filename: string): Promise<void> {
@@ -39,6 +40,17 @@ const PRIMARY = '#032e60';
 export default function SettingsPage() {
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cloud Sync state
+  const [supabaseUrl, setSupabaseUrl] = useState(localStorage.getItem('airnet_supabase_url') || '');
+  const [supabaseKey, setSupabaseKey] = useState(localStorage.getItem('airnet_supabase_anon_key') || '');
+  const [isCloudConfigured, setIsCloudConfigured] = useState(isSupabaseConfigured());
+
+  const handleSaveCloud = () => {
+    saveSupabaseCredentials(supabaseUrl, supabaseKey);
+    setIsCloudConfigured(isSupabaseConfigured());
+    showToast('Cloud Database configuration saved!', 'success');
+  };
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -274,6 +286,49 @@ export default function SettingsPage() {
               <Upload size={18} /> Upload Backup
             </button>
             <input type="file" accept=".xlsx,.xls,.json" className="hidden" ref={fileInputRef} onChange={handleRestore} />
+          </div>
+
+          {/* Cloud Sync Database Configuration */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Cloud size={20} className={isCloudConfigured ? "text-green-600" : "text-[#032e60]"} />
+              <h3 className="font-bold text-[18px]">Cloud Database Sync (Supabase)</h3>
+              {isCloudConfigured && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">Active</span>
+              )}
+            </div>
+            <p className="text-gray-600 text-[14px]">
+              Connect to a Supabase database to automatically synchronize all records and configurations across multiple PCs in real-time.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[13px] font-bold text-gray-700 mb-1">Supabase Project URL</label>
+                <input 
+                  type="text" 
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  placeholder="https://your-project.supabase.co"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] font-bold text-gray-700 mb-1">Supabase Anon Key</label>
+                <input 
+                  type="password" 
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                  placeholder="eyJh..."
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <button onClick={handleSaveCloud} className="btn-primary px-6 py-2.5 rounded-xl font-medium flex items-center gap-2" style={{ backgroundColor: PRIMARY, color: 'white' }}>
+                <Save size={18} /> Save & Connect
+              </button>
+            </div>
           </div>
 
           {/* Danger Zone */}
