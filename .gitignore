@@ -28,3 +28,10 @@ dist-ssr
 .vercel
 
 .vercel
+release-builds/
+release/
+*.zip
+*.tgz
+check_deploy.js
+deploy.cjs
+deploy_final.cjs
